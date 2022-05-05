@@ -9,6 +9,27 @@ const patient_1 = ref<Patient>({
   lastName: "Piekarz",
   heartrate: 80,
 });
+
+// const patients = [
+//   {
+//     id: 0,
+//     firstName: "Paweł",
+//     lastName: "Piekarz",
+//     actualDiagnosis: "good",
+//     status: [
+//       {
+//         time: "15:23:44",
+//         heartrate: 80,
+//         // diagnosis: "good",
+//       },
+//       {
+//         time: "15:23:43",
+//         heartrate: 75,
+//         // diagnosis: "good",
+//       },
+//     ],
+//   },
+// ];
 </script>
 
 <template>
