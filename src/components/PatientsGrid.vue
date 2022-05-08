@@ -1,14 +1,52 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import slider from "vue3-slider";
-import type { Patient } from "../types/patient";
+import type { Patient, PatientStatus } from "../types/patient";
 
 const patient_1 = ref<Patient>({
-  id: 1,
+  id: 0,
   firstName: "Paweł",
   lastName: "Piekarz",
-  heartrate: 80,
+  actualDiagnosis: "good",
+  status: [
+    {
+      time: "15:23:44",
+      heartrate: 80,
+      // diagnosis: "good",
+    },
+    {
+      time: "15:23:43",
+      heartrate: 75,
+      // diagnosis: "good",
+    },
+  ],
 });
+
+const simulatedHeartrate = ref(0);
+const timer = ref();
+
+function updateStatus(patient: Patient, status: PatientStatus) {
+  patient.status.push({
+    time: status.time,
+    heartrate: status.heartrate,
+  });
+}
+
+function startSimulation() {
+  if (timer.value != null) {
+    return;
+  }
+  timer.value = setInterval(function () {
+    var actualTime = new Date();
+    updateStatus(patient_1.value, {
+      time: actualTime.toLocaleTimeString(),
+      heartrate: simulatedHeartrate.value,
+    });
+  }, 1000);
+}
+function stopSimulation() {
+  clearInterval(timer.value);
+}
 
 // const patients = [
 //   {
@@ -44,9 +82,9 @@ const patient_1 = ref<Patient>({
         <h3>Status pacjenta:</h3>
         <div>
           Tętno:
-          <input type="text" v-model="patient_1.heartrate" />
+          <input type="text" v-model="simulatedHeartrate" />
           <slider
-            v-model="patient_1.heartrate"
+            v-model="simulatedHeartrate"
             color="#FB278D"
             track-color="#FEFEFE"
             max="200"
@@ -54,6 +92,11 @@ const patient_1 = ref<Patient>({
           />
         </div>
       </div>
+      <button :onclick="startSimulation">Start simulation</button>
+      <button :onclick="stopSimulation">Stop simulation</button>
+    </div>
+    <div>
+      {{ patient_1.status[patient_1.status.length - 1] }}
     </div>
   </div>
 </template>
