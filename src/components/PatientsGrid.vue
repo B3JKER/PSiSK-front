@@ -2,82 +2,62 @@
 import { ref } from "vue";
 import slider from "vue3-slider";
 import type { Patient, PatientStatus } from "../types/patient";
+import { getPatient } from "@/firebase";
 
-const patient_1 = ref<Patient>({
-  id: 0,
-  firstName: "Paweł",
-  lastName: "Piekarz",
-  actualDiagnosis: "good",
-  status: [
-    {
-      time: "15:23:44",
-      heartrate: 80,
-      // diagnosis: "good",
-    },
-    {
-      time: "15:23:43",
-      heartrate: 75,
-      // diagnosis: "good",
-    },
-  ],
-});
+const patient = ref<Patient>();
 
-const simulatedHeartrate = ref(0);
-const timer = ref();
-
-function updateStatus(patient: Patient, status: PatientStatus) {
-  patient.status.push({
-    time: status.time,
-    heartrate: status.heartrate,
+function searchPatient(id: number) {
+  getPatient(1).then((data) => {
+    if (data !== undefined) {
+      patient.value = data;
+    }
   });
 }
 
-function startSimulation() {
-  if (timer.value != null) {
-    return;
-  }
-  timer.value = setInterval(function () {
-    var actualTime = new Date();
-    updateStatus(patient_1.value, {
-      time: actualTime.toLocaleTimeString(),
-      heartrate: simulatedHeartrate.value,
+const simulatedHeartrate = ref(80);
+const timer = ref();
+const isStarted = ref(false);
+
+function updateStatus(patient: Patient, status: PatientStatus) {
+  if (patient.status) {
+    patient.status.push({
+      time: status.time,
+      heartrate: status.heartrate,
     });
-  }, 1000);
-}
-function stopSimulation() {
-  clearInterval(timer.value);
+  } else {
+    patient.status = [];
+    patient.status.push({
+      time: status.time,
+      heartrate: status.heartrate,
+    });
+  }
 }
 
-// const patients = [
-//   {
-//     id: 0,
-//     firstName: "Paweł",
-//     lastName: "Piekarz",
-//     actualDiagnosis: "good",
-//     status: [
-//       {
-//         time: "15:23:44",
-//         heartrate: 80,
-//         // diagnosis: "good",
-//       },
-//       {
-//         time: "15:23:43",
-//         heartrate: 75,
-//         // diagnosis: "good",
-//       },
-//     ],
-//   },
-// ];
+function startSimulation() {
+  if (patient.value !== undefined) {
+    isStarted.value = true;
+    timer.value = setInterval(function () {
+      var actualTime = new Date();
+      updateStatus(patient.value as Patient, {
+        time: actualTime.toLocaleTimeString(),
+        heartrate: simulatedHeartrate.value,
+      });
+    }, 1000);
+  }
+}
+
+function stopSimulation() {
+  isStarted.value = false;
+  clearInterval(timer.value);
+}
 </script>
 
 <template>
   <div class="patients-grid">
-    <div class="patient">
+    <div v-if="patient" class="patient">
       <h2>Dane pacjenta</h2>
-      <div>ID Pacjenta: {{ patient_1.id }}</div>
-      <div>
-        Imię i nazwisko: {{ patient_1.firstName }} {{ patient_1.lastName }}
-      </div>
+      <div>ID Pacjenta: {{ patient.id }}</div>
+      <div>Imię i nazwisko: {{ patient.firstName }} {{ patient.lastName }}</div>
       <div>
         <h3>Status pacjenta:</h3>
         <div>
@@ -87,16 +67,18 @@ function stopSimulation() {
             v-model="simulatedHeartrate"
             color="#FB278D"
             track-color="#FEFEFE"
-            max="200"
+            :max="200"
             width="200px"
           />
         </div>
       </div>
-      <button :onclick="startSimulation">Start simulation</button>
-      <button :onclick="stopSimulation">Stop simulation</button>
+      <button v-if="!isStarted" :onclick="startSimulation">
+        Start simulation
+      </button>
+      <button v-else :onclick="stopSimulation">Stop simulation</button>
     </div>
-    <div>
-      {{ patient_1.status[patient_1.status.length - 1] }}
+    <div v-if="patient && patient.status">
+      {{ patient.status[patient.status.length - 1] }}
     </div>
   </div>
 </template>

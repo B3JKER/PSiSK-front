@@ -8,6 +8,8 @@ import { RouterLink, RouterView } from "vue-router";
       <nav>
         <RouterLink to="/">Home</RouterLink>
         <RouterLink to="/patients">Pacjenci</RouterLink>
+        <RouterLink to="/patient-simulation">Symulacja pacjenta</RouterLink>
+        <RouterLink to="/create-patient">Dodaj pacjenta</RouterLink>
       </nav>
     </div>
   </header>
