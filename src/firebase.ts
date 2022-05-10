@@ -39,7 +39,7 @@ const firebaseConfig = {
 initializeApp(firebaseConfig);
 
 // Initialize Realtime Database
-const db = getDatabase();
+export const db = getDatabase();
 const dbRef = ref(getDatabase());
 // Realtime database functions
 

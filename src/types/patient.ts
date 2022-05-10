@@ -2,7 +2,7 @@ export interface Patient {
   id: number;
   firstName: string;
   lastName: string;
-  actualDiagnosis?: string;
+  diagnosis?: { [key: string]: string };
   status?: { [key: string]: PatientStatus };
 }
 
