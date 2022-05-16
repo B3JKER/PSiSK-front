@@ -94,18 +94,35 @@ function stopSimulation() {
  */
 const lastDiagnosis = computed(() => {
   if (patient.value && patient.value && patient.value.diagnosis) {
-    const diagnosis = patient.value.diagnosis;
-    const diagnosisArray = Object.keys(diagnosis).map((key) => [
-      key,
-      diagnosis[key],
-    ]);
-    return {
-      time: diagnosisArray[diagnosisArray.length - 1][0],
-      diagnosis: diagnosisArray[diagnosisArray.length - 1][1],
-    };
+    return Object.fromEntries(
+      Object.entries(patient.value.diagnosis)
+        .sort((a, b) => b[0].localeCompare(a[0]))
+        .slice(0, 10)
+    );
   }
   return {};
 });
+const patientStatusArray = computed(() => {
+  if (patient.value && patient.value.status) {
+    return Object.fromEntries(
+      Object.entries(patient.value.status)
+        .sort((a, b) => b[0].localeCompare(a[0]))
+        .slice(0, 50)
+    );
+  }
+  return undefined;
+});
+// const sortObj = computed(() => {
+//   if (patient.value && patient.value.status) {
+//     return Object.keys(patient.value.status)
+//       .sort()
+//       .reduce(function (result, key) {
+//         result[key] = patient?.value?.status![key];
+//         return result;
+//       }, {});
+//   }
+//   return {};
+// });
 // const diagnosisArray = (obj: { [key: string]: any }) => {
 //   return Object.keys(obj).map((key) => [key, obj[key]]);
 // };
@@ -145,17 +162,14 @@ const lastDiagnosis = computed(() => {
         <button v-else :onclick="stopSimulation">Stop simulation</button>
       </div>
       <div v-if="patient && patient.diagnosis">
-        Diagnosis: {{ lastDiagnosis.time }} {{ lastDiagnosis.diagnosis }}
+        Diagnosis:
+        <div v-for="(diagnosis, time) in lastDiagnosis" :key="time">
+          {{ time }} {{ diagnosis }}
+        </div>
       </div>
-      <div class="stats" v-if="patient && patient.status">
-        <div v-for="x in 50" :key="x">
-          {{
-            patient.status[
-              Object.keys(patient.status)[
-                Object.keys(patient.status).length - x
-              ]
-            ].heartrate
-          }}
+      <div class="stats" v-if="patientStatusArray">
+        <div v-for="(status, i) in patientStatusArray" :key="i">
+          {{ status.heartrate }}
         </div>
       </div>
     </div>
