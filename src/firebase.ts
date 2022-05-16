@@ -52,6 +52,11 @@ export const getPatient = async (id: number): Promise<Patient | undefined> => {
   return test.exists() ? test.val() : undefined;
 };
 
+export const getPatients = async () => {
+  const test = await get(child(dbRef, `patients/`));
+  return test.exists() ? test.val() : undefined;
+};
+
 export const updatePatientStatus = (
   id: number,
   time: string,

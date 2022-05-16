@@ -1,12 +1,45 @@
 <script setup lang="ts">
-import PatientsGrid from "../components/PatientsGrid.vue";
+import { ref } from "vue";
+import type { Patient } from "../types/patient";
+import { getPatients } from "@/firebase";
+
+const patients = ref<Array<Patient>>();
+getPatients().then((data) => {
+  if (data !== undefined) {
+    patients.value = data;
+  } else {
+    patients.value = undefined;
+  }
+});
 </script>
 
 <template>
   <div class="patients">
     <h1>Pacjenci</h1>
+    <div v-if="patients" class="patients-grid">
+      <div v-for="patient in patients" :key="patient.id" class="patient">
+        <div>ID Pacjenta: {{ patient.id }}</div>
+        <div>
+          Imię i nazwisko: {{ patient.firstName }} {{ patient.lastName }}
+        </div>
+      </div>
+    </div>
+    <div v-else class="loading">Loading Patients...</div>
   </div>
-  <PatientsGrid />
 </template>
 
-<style lang="scss" scoped></style>
+<style lang="scss" scoped>
+.patients-grid {
+  display: grid;
+  gap: 2rem;
+  width: 80%;
+  margin-top: 4rem;
+}
+.loading {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 50px;
+}
+</style>

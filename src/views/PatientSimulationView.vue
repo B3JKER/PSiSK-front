@@ -112,20 +112,6 @@ const patientStatusArray = computed(() => {
   }
   return undefined;
 });
-// const sortObj = computed(() => {
-//   if (patient.value && patient.value.status) {
-//     return Object.keys(patient.value.status)
-//       .sort()
-//       .reduce(function (result, key) {
-//         result[key] = patient?.value?.status![key];
-//         return result;
-//       }, {});
-//   }
-//   return {};
-// });
-// const diagnosisArray = (obj: { [key: string]: any }) => {
-//   return Object.keys(obj).map((key) => [key, obj[key]]);
-// };
 </script>
 
 <template>
@@ -168,6 +154,7 @@ const patientStatusArray = computed(() => {
         </div>
       </div>
       <div class="stats" v-if="patientStatusArray">
+        <h3>Heartrate</h3>
         <div v-for="(status, i) in patientStatusArray" :key="i">
           {{ status.heartrate }}
         </div>

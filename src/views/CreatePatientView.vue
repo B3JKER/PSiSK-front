@@ -17,8 +17,8 @@ const onSubmit = async () => {
     <h1>Dodaj pacjenta</h1>
     <form @submit.prevent="onSubmit">
       <input type="text" v-model="form.id" />
-      <input type="text" v-model="form.firstName" />
-      <input type="text" v-model="form.lastName" />
+      <input type="text" v-model="form.firstName" placeholder="First Name" />
+      <input type="text" v-model="form.lastName" placeholder="Last Name" />
       <button type="submit">Dodaj pacjenta</button>
     </form>
   </div>
