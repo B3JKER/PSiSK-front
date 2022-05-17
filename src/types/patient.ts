@@ -7,5 +7,11 @@ export interface Patient {
 }
 
 export interface PatientStatus {
-  heartrate: number;
+  ECG: number;
+  Pleth: number;
+  CO2: number;
+  ART: number;
+  AWP: number;
+  AWF: number;
+  AMV: number;
 }

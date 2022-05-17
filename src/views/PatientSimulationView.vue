@@ -11,7 +11,15 @@ import type { Unsubscribe } from "@firebase/util";
 // Constants
 const patient = ref<Patient>();
 const patientID = ref<number>(0);
-const simulatedHeartrate = ref(80);
+const simulatedStatus = ref<PatientStatus>({
+  ECG: 0.5,
+  Pleth: 0.5,
+  CO2: 0,
+  ART: 0,
+  AWP: 0,
+  AWF: 11,
+  AMV: 400,
+});
 const timer = ref();
 const isStarted = ref(false);
 
@@ -71,9 +79,7 @@ function startSimulation() {
       var actualTime = dayjs().format("DD-MM-YYYY--HH-mm-ss-SSS");
       updateStatus(
         patient.value as Patient,
-        {
-          heartrate: simulatedHeartrate.value,
-        },
+        { ...simulatedStatus.value },
         actualTime
       );
     }, 1000); // Timer interval
@@ -107,7 +113,7 @@ const patientStatusArray = computed(() => {
     return Object.fromEntries(
       Object.entries(patient.value.status)
         .sort((a, b) => b[0].localeCompare(a[0]))
-        .slice(0, 50)
+        .slice(0, 10)
     );
   }
   return undefined;
@@ -131,13 +137,93 @@ const patientStatusArray = computed(() => {
         <div>
           <h3>Status pacjenta:</h3>
           <div>
-            Tętno:
-            <input type="text" v-model="simulatedHeartrate" />
+            ECG
+            <input type="text" v-model="simulatedStatus.ECG" />
             <slider
-              v-model="simulatedHeartrate"
+              v-model="simulatedStatus.ECG"
+              color="#FB278D"
+              track-color="#FEFEFE"
+              :max="1.5"
+              :min="-0.3"
+              :step="0.01"
+              width="200px"
+            />
+          </div>
+          <div>
+            Pleth
+            <input type="text" v-model="simulatedStatus.Pleth" />
+            <slider
+              v-model="simulatedStatus.Pleth"
+              color="#FB278D"
+              track-color="#FEFEFE"
+              :max="1.5"
+              :min="0"
+              :step="0.01"
+              width="200px"
+            />
+          </div>
+          <div>
+            CO2
+            <input type="text" v-model="simulatedStatus.CO2" />
+            <slider
+              v-model="simulatedStatus.CO2"
+              color="#FB278D"
+              track-color="#FEFEFE"
+              :max="50"
+              :min="0"
+              :step="0.1"
+              width="200px"
+            />
+          </div>
+          <div>
+            ART
+            <input type="text" v-model="simulatedStatus.ART" />
+            <slider
+              v-model="simulatedStatus.ART"
               color="#FB278D"
               track-color="#FEFEFE"
               :max="200"
+              :min="0"
+              :step="1"
+              width="200px"
+            />
+          </div>
+          <div>
+            AWP
+            <input type="text" v-model="simulatedStatus.AWP" />
+            <slider
+              v-model="simulatedStatus.AWP"
+              color="#FB278D"
+              track-color="#FEFEFE"
+              :max="30"
+              :min="0"
+              :step="0.1"
+              width="200px"
+            />
+          </div>
+          <div>
+            AWF
+            <input type="text" v-model="simulatedStatus.AWF" />
+            <slider
+              v-model="simulatedStatus.AWF"
+              color="#FB278D"
+              track-color="#FEFEFE"
+              :max="60"
+              :min="-20"
+              :step="0.1"
+              width="200px"
+            />
+          </div>
+          <div>
+            AMV
+            <input type="text" v-model="simulatedStatus.AMV" />
+            <slider
+              v-model="simulatedStatus.AMV"
+              color="#FB278D"
+              track-color="#FEFEFE"
+              :max="2000"
+              :min="0"
+              :step="1"
               width="200px"
             />
           </div>
@@ -147,16 +233,90 @@ const patientStatusArray = computed(() => {
         </button>
         <button v-else :onclick="stopSimulation">Stop simulation</button>
       </div>
-      <div v-if="patient && patient.diagnosis">
-        Diagnosis:
-        <div v-for="(diagnosis, time) in lastDiagnosis" :key="time">
-          {{ time }} {{ diagnosis }}
-        </div>
-      </div>
+
       <div class="stats" v-if="patientStatusArray">
-        <h3>Heartrate</h3>
-        <div v-for="(status, i) in patientStatusArray" :key="i">
-          {{ status.heartrate }}
+        <div v-if="patient && patient.diagnosis">
+          Diagnosis:
+          <div
+            v-for="(diagnosis, time) in lastDiagnosis"
+            :key="time"
+            class="stats__grid__value"
+          >
+            {{ time }} {{ diagnosis }}
+          </div>
+        </div>
+        <h2>Status</h2>
+        <div class="stats__grid">
+          <div>
+            <h3>ECG</h3>
+            <span
+              v-for="(status, i) in patientStatusArray"
+              :key="i"
+              class="stats__grid__value"
+            >
+              {{ status.ECG }}
+            </span>
+          </div>
+          <div>
+            <h3>Pleth</h3>
+            <span
+              v-for="(status, i) in patientStatusArray"
+              :key="i"
+              class="stats__grid__value"
+            >
+              {{ status.Pleth }}
+            </span>
+          </div>
+          <div>
+            <h3>CO2</h3>
+            <span
+              v-for="(status, i) in patientStatusArray"
+              :key="i"
+              class="stats__grid__value"
+            >
+              {{ status.CO2 }}
+            </span>
+          </div>
+          <div>
+            <h3>ART</h3>
+            <span
+              v-for="(status, i) in patientStatusArray"
+              :key="i"
+              class="stats__grid__value"
+            >
+              {{ status.ART }}
+            </span>
+          </div>
+          <div>
+            <h3>AWP</h3>
+            <span
+              v-for="(status, i) in patientStatusArray"
+              :key="i"
+              class="stats__grid__value"
+            >
+              {{ status.AWP }}
+            </span>
+          </div>
+          <div>
+            <h3>AWF</h3>
+            <span
+              v-for="(status, i) in patientStatusArray"
+              :key="i"
+              class="stats__grid__value"
+            >
+              {{ status.AWF }}
+            </span>
+          </div>
+          <div>
+            <h3>AMV</h3>
+            <span
+              v-for="(status, i) in patientStatusArray"
+              :key="i"
+              class="stats__grid__value"
+            >
+              {{ status.AMV }}
+            </span>
+          </div>
         </div>
       </div>
     </div>
@@ -166,13 +326,19 @@ const patientStatusArray = computed(() => {
 <style lang="scss" scoped>
 .patients-grid {
   display: grid;
+  grid-template-columns: 1fr 1fr;
   width: 80%;
   margin-top: 100px;
 }
 .stats {
   display: flex;
-  & > * {
-    margin-right: 10px;
+  flex-flow: wrap column;
+  &__grid {
+    display: grid;
+    grid-template-rows: repeat(7, 1fr);
+    &__value {
+      margin-right: 10px;
+    }
   }
 }
 </style>
