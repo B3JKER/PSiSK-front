@@ -21,6 +21,7 @@ const simulatedStatus = ref<PatientStatus>({
   AMV: 400,
 });
 const timer = ref();
+const freq = ref(1000);
 const isStarted = ref(false);
 
 // database listener for value events
@@ -82,7 +83,7 @@ function startSimulation() {
         { ...simulatedStatus.value },
         actualTime
       );
-    }, 10); // Timer interval
+    }, freq.value); // Timer interval
   }
 }
 
@@ -103,7 +104,7 @@ const lastDiagnosis = computed(() => {
     return Object.fromEntries(
       Object.entries(patient.value.diagnosis)
         .sort((a, b) => b[0].localeCompare(a[0]))
-        .slice(0, 10)
+        .slice(0, 1)
     );
   }
   return {};
@@ -249,14 +250,15 @@ const forCharts = computed(() => {
           </div>
         </div>
         <button v-if="!isStarted" :onclick="startSimulation">
-          Start simulation
+          Rozpocznij symulacje
         </button>
-        <button v-else :onclick="stopSimulation">Stop simulation</button>
-      </div>
-
-      <div class="stats" v-if="patientStatusArray">
+        <button v-else :onclick="stopSimulation">Zatrzymaj symulacje</button>
+        <div class="freq-input">
+          Częstotliwość symulacji w milisekundach
+          <input type="number" v-model="freq" />
+        </div>
         <div v-if="patient && patient.diagnosis">
-          Diagnosis:
+          Diagnoza:
           <div
             v-for="(diagnosis, time) in lastDiagnosis"
             :key="time"
@@ -265,7 +267,9 @@ const forCharts = computed(() => {
             {{ time }} {{ diagnosis }}
           </div>
         </div>
-        <h2>Status</h2>
+      </div>
+
+      <div class="stats" v-if="patientStatusArray">
         <div class="stats__grid">
           <div>
             <div class="stats__grid__value">

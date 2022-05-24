@@ -6,7 +6,7 @@ import { RouterLink, RouterView } from "vue-router";
   <header>
     <div class="wrapper">
       <nav>
-        <RouterLink to="/">Home</RouterLink>
+        <RouterLink to="/">Strona główna</RouterLink>
         <RouterLink to="/patients">Pacjenci</RouterLink>
         <RouterLink to="/patient-simulation">Symulacja pacjenta</RouterLink>
         <RouterLink to="/create-patient">Dodaj pacjenta</RouterLink>
