@@ -9,11 +9,13 @@
     "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore"
   },
   "dependencies": {
+    "@vueform/slider": "^2.0.10",
     "chart.js": "^3.7.1",
     "firebase": "^9.7.0",
     "pinia": "^2.0.13",
     "vue": "^3.2.33",
     "vue-chartjs": "^4.0.7",
+    "vue-chartkick": "^1.1.0",
     "vue-dayjs": "^1.0.2",
     "vue-router": "^4.0.14",
     "vue3-slider": "^1.6.9"
@@ -21,6 +23,7 @@
   "devDependencies": {
     "@rushstack/eslint-patch": "^1.1.0",
     "@types/node": "^16.11.27",
+    "@types/vue-chartkick": "^0.5.1",
     "@vitejs/plugin-vue": "^2.3.1",
     "@vue/eslint-config-prettier": "^7.0.0",
     "@vue/eslint-config-typescript": "^10.0.0",

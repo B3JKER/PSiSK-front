@@ -82,7 +82,7 @@ function startSimulation() {
         { ...simulatedStatus.value },
         actualTime
       );
-    }, 1000); // Timer interval
+    }, 10); // Timer interval
   }
 }
 
@@ -113,8 +113,35 @@ const patientStatusArray = computed(() => {
     return Object.fromEntries(
       Object.entries(patient.value.status)
         .sort((a, b) => b[0].localeCompare(a[0]))
-        .slice(0, 10)
+        .slice(0, 200)
     );
+  }
+  return undefined;
+});
+
+const forCharts = computed(() => {
+  if (patientStatusArray.value) {
+    // var testowo: Array<{ [key: string]: number }> = [];
+    var testowo: Array<{ [key: string]: number }> = [
+      {},
+      {},
+      {},
+      {},
+      {},
+      {},
+      {},
+    ];
+    for (const [key, value] of Object.entries(patientStatusArray.value)) {
+      var slicedKey = key.slice(12).replaceAll("-", ":");
+      testowo[0][slicedKey] = value.ECG;
+      testowo[1][slicedKey] = value.Pleth;
+      testowo[2][slicedKey] = value.CO2;
+      testowo[3][slicedKey] = value.ART;
+      testowo[4][slicedKey] = value.AWP;
+      testowo[5][slicedKey] = value.AWF;
+      testowo[6][slicedKey] = value.AMV;
+    }
+    return testowo;
   }
   return undefined;
 });
@@ -138,7 +165,7 @@ const patientStatusArray = computed(() => {
           <h3>Status pacjenta:</h3>
           <div>
             ECG
-            <input type="text" v-model="simulatedStatus.ECG" />
+            <div>{{ simulatedStatus.ECG.toFixed(2) }}</div>
             <slider
               v-model="simulatedStatus.ECG"
               color="#FB278D"
@@ -146,12 +173,11 @@ const patientStatusArray = computed(() => {
               :max="1.5"
               :min="-0.3"
               :step="0.01"
-              width="200px"
             />
           </div>
           <div>
             Pleth
-            <input type="text" v-model="simulatedStatus.Pleth" />
+            <div>{{ simulatedStatus.Pleth.toFixed(2) }}</div>
             <slider
               v-model="simulatedStatus.Pleth"
               color="#FB278D"
@@ -159,12 +185,11 @@ const patientStatusArray = computed(() => {
               :max="1.5"
               :min="0"
               :step="0.01"
-              width="200px"
             />
           </div>
           <div>
             CO2
-            <input type="text" v-model="simulatedStatus.CO2" />
+            <div>{{ simulatedStatus.CO2.toFixed(2) }}</div>
             <slider
               v-model="simulatedStatus.CO2"
               color="#FB278D"
@@ -172,12 +197,11 @@ const patientStatusArray = computed(() => {
               :max="50"
               :min="0"
               :step="0.1"
-              width="200px"
             />
           </div>
           <div>
             ART
-            <input type="text" v-model="simulatedStatus.ART" />
+            <div>{{ simulatedStatus.ART.toFixed(2) }}</div>
             <slider
               v-model="simulatedStatus.ART"
               color="#FB278D"
@@ -185,12 +209,11 @@ const patientStatusArray = computed(() => {
               :max="200"
               :min="0"
               :step="1"
-              width="200px"
             />
           </div>
           <div>
             AWP
-            <input type="text" v-model="simulatedStatus.AWP" />
+            <div>{{ simulatedStatus.AWP.toFixed(2) }}</div>
             <slider
               v-model="simulatedStatus.AWP"
               color="#FB278D"
@@ -198,12 +221,11 @@ const patientStatusArray = computed(() => {
               :max="30"
               :min="0"
               :step="0.1"
-              width="200px"
             />
           </div>
           <div>
             AWF
-            <input type="text" v-model="simulatedStatus.AWF" />
+            <div>{{ simulatedStatus.AWF.toFixed(2) }}</div>
             <slider
               v-model="simulatedStatus.AWF"
               color="#FB278D"
@@ -211,12 +233,11 @@ const patientStatusArray = computed(() => {
               :max="60"
               :min="-20"
               :step="0.1"
-              width="200px"
             />
           </div>
           <div>
             AMV
-            <input type="text" v-model="simulatedStatus.AMV" />
+            <div>{{ simulatedStatus.AMV.toFixed(2) }}</div>
             <slider
               v-model="simulatedStatus.AMV"
               color="#FB278D"
@@ -224,7 +245,6 @@ const patientStatusArray = computed(() => {
               :max="2000"
               :min="0"
               :step="1"
-              width="200px"
             />
           </div>
         </div>
@@ -248,74 +268,68 @@ const patientStatusArray = computed(() => {
         <h2>Status</h2>
         <div class="stats__grid">
           <div>
-            <h3>ECG</h3>
-            <span
-              v-for="(status, i) in patientStatusArray"
-              :key="i"
-              class="stats__grid__value"
-            >
-              {{ status.ECG }}
-            </span>
+            <div class="stats__grid__value">
+              <line-chart
+                :data="forCharts ? forCharts[0] : {}"
+                xtitle="Time"
+                ytitle="ECG"
+              >
+              </line-chart>
+            </div>
           </div>
           <div>
-            <h3>Pleth</h3>
-            <span
-              v-for="(status, i) in patientStatusArray"
-              :key="i"
-              class="stats__grid__value"
-            >
-              {{ status.Pleth }}
-            </span>
+            <div class="stats__grid__value">
+              <line-chart
+                :data="forCharts ? forCharts[1] : {}"
+                xtitle="Time"
+                ytitle="Pleth"
+              ></line-chart>
+            </div>
           </div>
           <div>
-            <h3>CO2</h3>
-            <span
-              v-for="(status, i) in patientStatusArray"
-              :key="i"
-              class="stats__grid__value"
-            >
-              {{ status.CO2 }}
-            </span>
+            <div class="stats__grid__value">
+              <line-chart
+                :data="forCharts ? forCharts[2] : {}"
+                xtitle="Time"
+                ytitle="CO2"
+              ></line-chart>
+            </div>
           </div>
           <div>
-            <h3>ART</h3>
-            <span
-              v-for="(status, i) in patientStatusArray"
-              :key="i"
-              class="stats__grid__value"
-            >
-              {{ status.ART }}
-            </span>
+            <div class="stats__grid__value">
+              <line-chart
+                :data="forCharts ? forCharts[3] : {}"
+                xtitle="Time"
+                ytitle="ART"
+              ></line-chart>
+            </div>
           </div>
           <div>
-            <h3>AWP</h3>
-            <span
-              v-for="(status, i) in patientStatusArray"
-              :key="i"
-              class="stats__grid__value"
-            >
-              {{ status.AWP }}
-            </span>
+            <div class="stats__grid__value">
+              <line-chart
+                :data="forCharts ? forCharts[4] : {}"
+                xtitle="Time"
+                ytitle="AWP"
+              ></line-chart>
+            </div>
           </div>
           <div>
-            <h3>AWF</h3>
-            <span
-              v-for="(status, i) in patientStatusArray"
-              :key="i"
-              class="stats__grid__value"
-            >
-              {{ status.AWF }}
-            </span>
+            <div class="stats__grid__value">
+              <line-chart
+                :data="forCharts ? forCharts[5] : {}"
+                xtitle="Time"
+                ytitle="AWF"
+              ></line-chart>
+            </div>
           </div>
           <div>
-            <h3>AMV</h3>
-            <span
-              v-for="(status, i) in patientStatusArray"
-              :key="i"
-              class="stats__grid__value"
-            >
-              {{ status.AMV }}
-            </span>
+            <div class="stats__grid__value">
+              <line-chart
+                :data="forCharts ? forCharts[6] : {}"
+                xtitle="Time"
+                ytitle="AMV"
+              ></line-chart>
+            </div>
           </div>
         </div>
       </div>
@@ -324,18 +338,22 @@ const patientStatusArray = computed(() => {
 </template>
 
 <style lang="scss" scoped>
+.patient {
+  padding-right: 20px;
+}
 .patients-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  width: 80%;
-  margin-top: 100px;
+  grid-template-columns: 0.2fr 1fr;
+  width: 100%;
+  margin-top: 50px;
 }
 .stats {
   display: flex;
   flex-flow: wrap column;
+  background-color: white;
   &__grid {
     display: grid;
-    grid-template-rows: repeat(7, 1fr);
+    grid-template-columns: repeat(2, 1fr);
     &__value {
       margin-right: 10px;
     }
