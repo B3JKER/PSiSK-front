@@ -5,6 +5,7 @@ import { getPatients, deletePatient } from "@/firebase";
 
 const patients = ref<Array<Patient>>();
 const confirm = ref<Array<boolean>>([]);
+const deleting = ref<Array<boolean>>([]);
 
 function getAllPatients() {
   getPatients().then((data) => {
@@ -13,6 +14,7 @@ function getAllPatients() {
       if (patients.value)
         patients.value.forEach((element) => {
           confirm.value[element.id] = false;
+          deleting.value[element.id] = false;
         });
     } else {
       patients.value = undefined;

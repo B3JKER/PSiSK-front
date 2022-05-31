@@ -10,11 +10,15 @@ import { ref as fref, onValue } from "firebase/database";
 import type { Unsubscribe } from "@firebase/util";
 
 // import cases
-import heart_attack_json from "../assets/cases/heart_attack.json";
-import normal_json from "../assets/cases/normal.json";
+import heart_attack_1_json from "../assets/cases/heart_attack_1.json";
+import heart_attack_2_json from "../assets/cases/heart_attack_2.json";
+// import heart_attack_3_json from "../assets/cases/heart_attack_3.json";
+import healthy_json from "../assets/cases/healthy.json";
 
-const heartAttackCase: Array<PatientStatus> = heart_attack_json.data;
-const normalCase: Array<PatientStatus> = normal_json.data;
+const heartAttackCase1: Array<PatientStatus> = heart_attack_1_json.data;
+const heartAttackCase2: Array<PatientStatus> = heart_attack_2_json.data;
+// const heartAttackCase3: Array<PatientStatus> = heart_attack_3_json.data;
+const healthyCase: Array<PatientStatus> = healthy_json.data;
 
 // Constants
 const patient = ref<Patient>();
@@ -22,8 +26,9 @@ const patientID = ref<number>(0);
 const timer = ref();
 const freq = ref(20); // Timer interval in ms
 const isStarted = ref(false);
-const choosedCase = ref<Array<PatientStatus>>(normalCase);
+const choosedCase = ref<Array<PatientStatus>>(healthyCase);
 const choosedCaseID = ref<number>(0);
+const showCharts = ref<number>(0);
 
 // database listener for value events
 var diagnosisListener: Unsubscribe;
@@ -73,8 +78,7 @@ function startSimulation() {
     );
     diagnosisListener = onValue(refDiagnosis, (snapshot) => {
       const data = snapshot.val();
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      patient.value!.diagnosis = data;
+      if (patient.value) patient.value.diagnosis = data;
     });
     var i = 0;
     // Timer to update simulation
@@ -111,10 +115,11 @@ const lastDiagnosis = computed(() => {
 });
 const patientStatusArray = computed(() => {
   if (patient.value && patient.value.status) {
+    const arrayLen = Object.entries(patient.value.status).length;
     return Object.fromEntries(
       Object.entries(patient.value.status)
-        .sort((a, b) => b[0].localeCompare(a[0]))
-        .slice(0, 250)
+        // .sort((a, b) => a[0].localeCompare(b[0]))
+        .slice(arrayLen - 380 < 0 ? 0 : arrayLen - 380, arrayLen)
     );
   }
   return undefined;
@@ -136,12 +141,12 @@ const forCharts = computed(() => {
       const keyInt = parseInt(key);
       var slicedKey = dayjs(keyInt).format("HH:mm:ss:SSS");
       testowo[0][slicedKey] = value.ECG;
-      // testowo[1][slicedKey] = value.Pleth;
-      // testowo[2][slicedKey] = value.CO2;
-      // testowo[3][slicedKey] = value.ART;
-      // testowo[4][slicedKey] = value.AWP;
-      // testowo[5][slicedKey] = value.AWF;
-      // testowo[6][slicedKey] = value.AMV;
+      testowo[1][slicedKey] = value.Pleth;
+      testowo[2][slicedKey] = value.CO2;
+      testowo[3][slicedKey] = value.ART;
+      testowo[4][slicedKey] = value.AWP;
+      testowo[5][slicedKey] = value.AWF;
+      testowo[6][slicedKey] = value.AMV;
     }
     return testowo;
   }
@@ -187,7 +192,7 @@ onMounted(() => {
           <div>
             <button
               @click="
-                choosedCase = normalCase;
+                choosedCase = healthyCase;
                 choosedCaseID = 0;
               "
               :class="{ 'button-red': choosedCaseID == 0 }"
@@ -196,13 +201,31 @@ onMounted(() => {
             </button>
             <button
               @click="
-                choosedCase = heartAttackCase;
+                choosedCase = heartAttackCase1;
                 choosedCaseID = 1;
               "
               :class="{ 'button-red': choosedCaseID == 1 }"
             >
-              Zawał serca
+              Zawał serca 1
             </button>
+            <button
+              @click="
+                choosedCase = heartAttackCase2;
+                choosedCaseID = 2;
+              "
+              :class="{ 'button-red': choosedCaseID == 2 }"
+            >
+              Zawał serca 2
+            </button>
+            <!-- <button
+              @click="
+                choosedCase = heartAttackCase3;
+                choosedCaseID = 3;
+              "
+              :class="{ 'button-red': choosedCaseID == 3 }"
+            >
+              Zawał serca 3
+            </button> -->
           </div>
         </div>
         <div v-if="patient && patient.diagnosis">
@@ -212,77 +235,116 @@ onMounted(() => {
             :key="time"
             class="stats__grid__value"
           >
-            {{ time }} {{ diagnosis }}
+            <span
+              >{{ dayjs(parseInt(time as unknown as string)).format("HH:mm:ss.SSS") }}</span
+            >:
+            {{ diagnosis }}
           </div>
+        </div>
+        <div>
+          <button
+            @click="showCharts = 0"
+            :class="{ 'button-red': showCharts == 0 }"
+          >
+            ECG
+          </button>
+          <button
+            @click="showCharts = 1"
+            :class="{ 'button-red': showCharts == 1 }"
+          >
+            Pleth
+          </button>
+          <button
+            @click="showCharts = 2"
+            :class="{ 'button-red': showCharts == 2 }"
+          >
+            CO2
+          </button>
+          <button
+            @click="showCharts = 3"
+            :class="{ 'button-red': showCharts == 3 }"
+          >
+            ART
+          </button>
+          <button
+            @click="showCharts = 4"
+            :class="{ 'button-red': showCharts == 4 }"
+          >
+            AWP
+          </button>
+          <button
+            @click="showCharts = 5"
+            :class="{ 'button-red': showCharts == 5 }"
+          >
+            AWF
+          </button>
+          <button
+            @click="showCharts = 6"
+            :class="{ 'button-red': showCharts == 6 }"
+          >
+            AMV
+          </button>
         </div>
       </div>
 
       <div class="stats" v-if="patientStatusArray">
         <div class="stats__grid">
-          <div>
-            <div class="stats__grid__value">
-              <line-chart
-                :data="forCharts ? forCharts[0] : {}"
-                xtitle="Time"
-                ytitle="ECG"
-              >
-              </line-chart>
-            </div>
+          <div v-if="showCharts == 0" class="stats__grid__value">
+            <line-chart
+              :data="forCharts ? forCharts[0] : {}"
+              xtitle="Czas"
+              ytitle="ECG"
+            >
+            </line-chart>
           </div>
-          <!-- <div>
-            <div class="stats__grid__value">
-              <line-chart
-                :data="forCharts ? forCharts[1] : {}"
-                xtitle="Time"
-                ytitle="Pleth"
-              ></line-chart>
-            </div>
+
+          <div v-else-if="showCharts == 1" class="stats__grid__value">
+            <line-chart
+              :data="forCharts ? forCharts[1] : {}"
+              xtitle="Czas"
+              ytitle="Pleth"
+            ></line-chart>
           </div>
-          <div>
-            <div class="stats__grid__value">
-              <line-chart
-                :data="forCharts ? forCharts[2] : {}"
-                xtitle="Time"
-                ytitle="CO2"
-              ></line-chart>
-            </div>
+
+          <div v-else-if="showCharts == 2" class="stats__grid__value">
+            <line-chart
+              :data="forCharts ? forCharts[2] : {}"
+              xtitle="Czas"
+              ytitle="CO2"
+            ></line-chart>
           </div>
-          <div>
-            <div class="stats__grid__value">
-              <line-chart
-                :data="forCharts ? forCharts[3] : {}"
-                xtitle="Time"
-                ytitle="ART"
-              ></line-chart>
-            </div>
+
+          <div v-else-if="showCharts == 3" class="stats__grid__value">
+            <line-chart
+              :data="forCharts ? forCharts[3] : {}"
+              xtitle="Czas"
+              ytitle="ART"
+            ></line-chart>
           </div>
-          <div>
-            <div class="stats__grid__value">
-              <line-chart
-                :data="forCharts ? forCharts[4] : {}"
-                xtitle="Time"
-                ytitle="AWP"
-              ></line-chart>
-            </div>
+
+          <div v-else-if="showCharts == 4" class="stats__grid__value">
+            <line-chart
+              :data="forCharts ? forCharts[4] : {}"
+              xtitle="Czas"
+              ytitle="AWP"
+            ></line-chart>
           </div>
-          <div>
-            <div class="stats__grid__value">
-              <line-chart
-                :data="forCharts ? forCharts[5] : {}"
-                xtitle="Time"
-                ytitle="AWF"
-              ></line-chart>
-            </div>
+
+          <div v-else-if="showCharts == 5" class="stats__grid__value">
+            <line-chart
+              :data="forCharts ? forCharts[5] : {}"
+              xtitle="Czas"
+              ytitle="AWF"
+            ></line-chart>
           </div>
-          <div>
-            <div class="stats__grid__value">
-              <line-chart
-                :data="forCharts ? forCharts[6] : {}"
-                xtitle="Time"
-                ytitle="AMV"
-              ></line-chart>
-            </div>
-          </div> -->
+
+          <div v-else-if="showCharts == 6" class="stats__grid__value">
+            <line-chart
+              :data="forCharts ? forCharts[6] : {}"
+              xtitle="Czas"
+              ytitle="AMV"
+            ></line-chart>
+          </div>
         </div>
       </div>
     </div>
@@ -290,28 +352,37 @@ onMounted(() => {
 </template>
 
 <style lang="scss" scoped>
-.patient {
-  padding-right: 20px;
-}
 .patients-grid {
-  display: grid;
-  grid-template-columns: 0.2fr 1fr;
+  display: flex;
   width: 100%;
   margin-top: 50px;
 }
+.patient {
+  width: 25%;
+  padding-right: 20px;
+}
+
 .stats {
   display: flex;
   flex-flow: wrap column;
   background-color: white;
+  width: 75%;
+
   &__grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    &__value {
-      margin-right: 10px;
-    }
+    width: 100%;
+    padding: 20px;
   }
 }
+
 .button-red {
   background-color: red;
+  color: white;
+}
+button {
+  padding: 6px;
+  font-size: 14px;
+}
+input {
+  height: 30px;
 }
 </style>
