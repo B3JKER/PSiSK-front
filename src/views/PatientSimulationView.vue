@@ -378,11 +378,4 @@ onMounted(() => {
   background-color: red;
   color: white;
 }
-button {
-  padding: 6px;
-  font-size: 14px;
-}
-input {
-  height: 30px;
-}
 </style>

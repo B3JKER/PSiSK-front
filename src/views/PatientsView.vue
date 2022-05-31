@@ -34,12 +34,15 @@ onMounted(() => {
 <template>
   <div class="patients">
     <h1>Pacjenci</h1>
+    <div v-if="patients" class="patients-grid__title">
+      <div>ID Pacjenta</div>
+      <div>Imię i nazwisko</div>
+      <div>Akcje</div>
+    </div>
     <div v-if="patients" class="patients-grid">
       <div v-for="patient in patients" :key="patient.id" class="patient">
-        <div>ID Pacjenta: {{ patient.id }}</div>
-        <div>
-          Imię i nazwisko: {{ patient.firstName }} {{ patient.lastName }}
-        </div>
+        <div>{{ patient.id }}</div>
+        <div>{{ patient.firstName }} {{ patient.lastName }}</div>
         <button v-if="!confirm[patient.id]" @click="confirm[patient.id] = true">
           Usuń pacjenta
         </button>
@@ -72,14 +75,25 @@ onMounted(() => {
 .patients-grid {
   display: grid;
   gap: 2rem;
-  width: 80%;
-  margin-top: 4rem;
+  width: 100%;
+
+  &__title {
+    display: grid;
+    grid-template-columns: 0.4fr 1fr 0.4fr 0.4fr;
+    width: 100%;
+    margin: 40px 0;
+    padding-top: 20px;
+    font-size: 20px;
+    font-weight: bold;
+    border-top: 1px solid white;
+  }
 }
-.loading {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  font-size: 50px;
+.patient {
+  display: grid;
+  grid-template-columns: 0.4fr 1fr 0.4fr 0.4fr;
+  font-size: 20px;
+}
+button {
+  font-size: 20px;
 }
 </style>
