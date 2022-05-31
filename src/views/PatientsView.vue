@@ -50,6 +50,16 @@ onMounted(() => {
         >
           Czy napewno?
         </button>
+        <button
+          @click="
+            $router.push({
+              path: '/patient-simulation',
+              query: { id: patient.id },
+            })
+          "
+        >
+          Symulacja
+        </button>
       </div>
     </div>
     <div v-else class="loading">Ładowanie listy pacjentów...</div>

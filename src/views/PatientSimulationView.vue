@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { ref, computed } from "vue";
-import slider from "vue3-slider";
+import { ref, computed, onMounted } from "vue";
+import { useRoute } from "vue-router";
+// import slider from "vue3-slider";
 import type { Patient, PatientStatus } from "../types/patient";
 import dayjs from "dayjs";
 // Firebase import
@@ -113,7 +114,7 @@ const patientStatusArray = computed(() => {
     return Object.fromEntries(
       Object.entries(patient.value.status)
         .sort((a, b) => b[0].localeCompare(a[0]))
-        .slice(0, 500)
+        .slice(0, 250)
     );
   }
   return undefined;
@@ -133,7 +134,7 @@ const forCharts = computed(() => {
     ];
     for (const [key, value] of Object.entries(patientStatusArray.value)) {
       const keyInt = parseInt(key);
-      var slicedKey = dayjs(keyInt).format("mm:ss:SSS");
+      var slicedKey = dayjs(keyInt).format("HH:mm:ss:SSS");
       testowo[0][slicedKey] = value.ECG;
       // testowo[1][slicedKey] = value.Pleth;
       // testowo[2][slicedKey] = value.CO2;
@@ -145,6 +146,14 @@ const forCharts = computed(() => {
     return testowo;
   }
   return undefined;
+});
+
+onMounted(() => {
+  const currentRoute = useRoute().query.id;
+  if (currentRoute) {
+    patientID.value = currentRoute as unknown as number;
+    searchPatient(patientID.value);
+  }
 });
 </script>
 
