@@ -83,7 +83,7 @@ function startSimulation() {
     var i = 0;
     // Timer to update simulation
     timer.value = setInterval(function () {
-      if (i === choosedCase.value.length - 1) i = 0;
+      if (i >= choosedCase.value.length - 1) i = 0;
       else i++;
       var actualTime = dayjs().valueOf().toString();
       updateStatus(patient.value as Patient, choosedCase.value[i], actualTime);
