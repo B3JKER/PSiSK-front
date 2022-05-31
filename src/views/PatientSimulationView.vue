@@ -146,7 +146,7 @@ const forCharts = computed(() => {
       testowo[3][slicedKey] = value.ART;
       testowo[4][slicedKey] = value.AWP;
       testowo[5][slicedKey] = value.AWF;
-      testowo[6][slicedKey] = value.AMV;
+      testowo[6][slicedKey] = value.AWV;
     }
     return testowo;
   }
@@ -282,7 +282,7 @@ onMounted(() => {
             @click="showCharts = 6"
             :class="{ 'button-red': showCharts == 6 }"
           >
-            AMV
+            AWV
           </button>
         </div>
       </div>
@@ -342,7 +342,7 @@ onMounted(() => {
             <line-chart
               :data="forCharts ? forCharts[6] : {}"
               xtitle="Czas"
-              ytitle="AMV"
+              ytitle="AWV"
             ></line-chart>
           </div>
         </div>

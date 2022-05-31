@@ -13,5 +13,5 @@ export interface PatientStatus {
   ART: number;
   AWP: number;
   AWF: number;
-  AMV: number;
+  AWV: number;
 }
