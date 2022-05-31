@@ -1,15 +1,31 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, onMounted } from "vue";
 import type { Patient } from "../types/patient";
-import { getPatients } from "@/firebase";
+import { getPatients, deletePatient } from "@/firebase";
 
 const patients = ref<Array<Patient>>();
-getPatients().then((data) => {
-  if (data !== undefined) {
-    patients.value = data;
-  } else {
-    patients.value = undefined;
-  }
+const confirm = ref<Array<boolean>>([]);
+
+function getAllPatients() {
+  getPatients().then((data) => {
+    if (data !== undefined) {
+      patients.value = data;
+      if (patients.value)
+        patients.value.forEach((element) => {
+          confirm.value[element.id] = false;
+        });
+    } else {
+      patients.value = undefined;
+    }
+  });
+}
+function deleteAPatient(id: number) {
+  deletePatient(id).then(() => {
+    getAllPatients();
+  });
+}
+onMounted(() => {
+  getAllPatients();
 });
 </script>
 
@@ -22,9 +38,21 @@ getPatients().then((data) => {
         <div>
           Imię i nazwisko: {{ patient.firstName }} {{ patient.lastName }}
         </div>
+        <button v-if="!confirm[patient.id]" @click="confirm[patient.id] = true">
+          Usuń pacjenta
+        </button>
+        <button
+          v-else
+          @click="
+            deleteAPatient(patient.id);
+            confirm[patient.id] = false;
+          "
+        >
+          Czy napewno?
+        </button>
       </div>
     </div>
-    <div v-else class="loading">Loading Patients...</div>
+    <div v-else class="loading">Ładowanie listy pacjentów...</div>
   </div>
 </template>
 

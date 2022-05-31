@@ -15,6 +15,7 @@ import {
   onValue,
   push,
   update,
+  remove,
 } from "firebase/database";
 
 // import { getAnalytics } from "firebase/analytics";
@@ -50,6 +51,11 @@ export const createPatient = (patient: Patient) => {
 export const getPatient = async (id: number): Promise<Patient | undefined> => {
   const test = await get(child(dbRef, `patients/${id}`));
   return test.exists() ? test.val() : undefined;
+};
+
+export const deletePatient = async (id: number): Promise<string> => {
+  await remove(child(dbRef, `patients/${id}`));
+  return "deleted";
 };
 
 export const getPatients = async () => {
