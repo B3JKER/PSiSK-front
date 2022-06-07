@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
 import { useRoute } from "vue-router";
-// import slider from "vue3-slider";
 import type { Patient, PatientStatus } from "../types/patient";
 import dayjs from "dayjs";
 // Firebase import
@@ -12,7 +11,6 @@ import type { Unsubscribe } from "@firebase/util";
 // import cases
 import heart_attack_1_json from "../assets/cases/heart_attack_1.json";
 import heart_attack_2_json from "../assets/cases/heart_attack_2.json";
-// import heart_attack_3_json from "../assets/cases/heart_attack_3.json";
 import healthy_json from "../assets/cases/healthy.json";
 
 const heartAttackCase1: Array<PatientStatus> = heart_attack_1_json.data;
@@ -217,31 +215,10 @@ onMounted(() => {
             >
               Zawał serca 2
             </button>
-            <!-- <button
-              @click="
-                choosedCase = heartAttackCase3;
-                choosedCaseID = 3;
-              "
-              :class="{ 'button-red': choosedCaseID == 3 }"
-            >
-              Zawał serca 3
-            </button> -->
-          </div>
-        </div>
-        <div v-if="patient && patient.diagnosis">
-          Diagnoza:
-          <div
-            v-for="(diagnosis, time) in lastDiagnosis"
-            :key="time"
-            class="stats__grid__value"
-          >
-            <span
-              >{{ dayjs(parseInt(time as unknown as string)).format("HH:mm:ss.SSS") }}</span
-            >:
-            {{ diagnosis }}
           </div>
         </div>
         <div>
+          <div>Wybierz wykres:</div>
           <button
             @click="showCharts = 0"
             :class="{ 'button-red': showCharts == 0 }"
@@ -284,6 +261,19 @@ onMounted(() => {
           >
             AWV
           </button>
+        </div>
+        <div v-if="patient && patient.diagnosis" class="diagnosis">
+          Diagnoza:
+          <div
+            v-for="(diagnosis, time) in lastDiagnosis"
+            :key="time"
+            class="stats__grid__value"
+          >
+            <span
+              >{{ dayjs(parseInt(time as unknown as string)).format("DD-MM-YYYY HH:mm:ss.SSS") }}</span
+            >:
+            {{ diagnosis }}
+          </div>
         </div>
       </div>
 
@@ -373,7 +363,10 @@ onMounted(() => {
     padding: 20px;
   }
 }
-
+.diagnosis {
+  margin-top: 20px;
+  font-size: 20px;
+}
 .button-red {
   background-color: red;
   color: white;
