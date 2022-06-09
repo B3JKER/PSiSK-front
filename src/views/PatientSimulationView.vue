@@ -4,7 +4,12 @@ import { useRoute } from "vue-router";
 import type { Patient, PatientStatus } from "../types/patient";
 import dayjs from "dayjs";
 // Firebase import
-import { getPatient, updatePatientStatus, db } from "@/firebase";
+import {
+  getPatient,
+  updatePatientStatus,
+  getPatientStatus,
+  db,
+} from "@/firebase";
 import { ref as fref, onValue } from "firebase/database";
 import type { Unsubscribe } from "@firebase/util";
 
@@ -40,19 +45,19 @@ function searchPatient(id: number) {
   getPatient(id).then((data) => {
     if (data !== undefined) {
       patient.value = data;
-      if (data.status) {
-        var sliced = data.status;
-        const arrayLen = Object.entries(sliced).length;
-        slicedStatus.value = Object.entries(sliced).slice(
-          arrayLen - 380 < 0 ? 0 : arrayLen - 380,
-          arrayLen
-        );
-      } else {
-        slicedStatus.value = undefined;
-      }
     } else {
       patient.value = undefined;
     }
+  });
+  getPatientStatus(id).then((data) => {
+    if (data !== undefined) {
+      var sliced = data;
+      const arrayLen = Object.entries(sliced).length;
+      slicedStatus.value = Object.entries(sliced).slice(
+        arrayLen - 380 < 0 ? 0 : arrayLen - 380,
+        arrayLen
+      );
+    } else slicedStatus.value = undefined;
   });
 }
 
@@ -82,10 +87,7 @@ function startSimulation() {
   if (patient.value) {
     isStarted.value = true;
     // Listener for updates diagnosis
-    const refDiagnosis = fref(
-      db,
-      "patients/" + patient.value.id + "/diagnosis"
-    );
+    const refDiagnosis = fref(db, "diagnoses/" + patient.value.id);
     diagnosisListener = onValue(refDiagnosis, (snapshot) => {
       const data = snapshot.val();
       if (patient.value) patient.value.diagnosis = data;
