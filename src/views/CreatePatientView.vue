@@ -38,4 +38,11 @@ onMounted(() => {
   </div>
 </template>
 
-<style lang="scss" scoped></style>
+<style lang="scss" scoped>
+h1 {
+  width: 100%;
+  padding-bottom: 40px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid white;
+}
+</style>

@@ -344,6 +344,12 @@ onMounted(() => {
 </template>
 
 <style lang="scss" scoped>
+h1 {
+  width: 100%;
+  padding-bottom: 40px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid white;
+}
 .patients-grid {
   display: flex;
   width: 100%;
