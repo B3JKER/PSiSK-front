@@ -2,7 +2,12 @@
 import { ref } from "vue";
 import { createPatient } from "@/firebase";
 import type { Patient } from "../types/patient";
-const form = ref<Patient>({ id: 0, firstName: "", lastName: "" });
+const form = ref<Patient>({
+  id: 0,
+  firstName: "",
+  lastName: "",
+  diagnosis: {},
+});
 const onSubmit = async () => {
   if (form.value) {
     await createPatient(form.value);

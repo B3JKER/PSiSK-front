@@ -27,6 +27,7 @@ const isStarted = ref(false);
 const choosedCase = ref<Array<PatientStatus>>(healthyCase);
 const choosedCaseID = ref<number>(0);
 const showCharts = ref<number>(0);
+const slicedStatus = ref();
 
 // database listener for value events
 var diagnosisListener: Unsubscribe;
@@ -39,6 +40,16 @@ function searchPatient(id: number) {
   getPatient(id).then((data) => {
     if (data !== undefined) {
       patient.value = data;
+      if (data.status) {
+        var sliced = data.status;
+        const arrayLen = Object.entries(sliced).length;
+        slicedStatus.value = Object.entries(sliced).slice(
+          arrayLen - 380 < 0 ? 0 : arrayLen - 380,
+          arrayLen
+        );
+      } else {
+        slicedStatus.value = undefined;
+      }
     } else {
       patient.value = undefined;
     }
@@ -53,11 +64,12 @@ function searchPatient(id: number) {
  */
 function updateStatus(patient: Patient, status: PatientStatus, time: string) {
   updatePatientStatus(patient.id, time, status);
-  if (patient.status) {
-    patient.status[time] = status;
+  if (slicedStatus.value) {
+    if (slicedStatus.value.length > 380) slicedStatus.value.shift();
+    slicedStatus.value.push([time, status]);
   } else {
-    patient.status = {};
-    patient.status[time] = status;
+    slicedStatus.value = [];
+    slicedStatus.value.push([time, status]);
   }
 }
 
@@ -111,21 +123,9 @@ const lastDiagnosis = computed(() => {
   }
   return {};
 });
-const patientStatusArray = computed(() => {
-  if (patient.value && patient.value.status) {
-    const arrayLen = Object.entries(patient.value.status).length;
-    return Object.fromEntries(
-      Object.entries(patient.value.status)
-        // .sort((a, b) => a[0].localeCompare(b[0]))
-        .slice(arrayLen - 380 < 0 ? 0 : arrayLen - 380, arrayLen)
-    );
-  }
-  return undefined;
-});
 
 const forCharts = computed(() => {
-  if (patientStatusArray.value) {
-    // var testowo: Array<{ [key: string]: number }> = [];
+  if (slicedStatus.value) {
     var testowo: Array<{ [key: string]: number }> = [
       {},
       {},
@@ -135,7 +135,7 @@ const forCharts = computed(() => {
       {},
       {},
     ];
-    for (const [key, value] of Object.entries(patientStatusArray.value)) {
+    for (const [key, value] of slicedStatus.value) {
       const keyInt = parseInt(key);
       var slicedKey = dayjs(keyInt).format("HH:mm:ss:SSS");
       testowo[0][slicedKey] = value.ECG;
@@ -270,14 +270,14 @@ onMounted(() => {
             class="stats__grid__value"
           >
             <span
-              >{{ dayjs(parseInt(time as unknown as string)).format("DD-MM-YYYY HH:mm:ss.SSS") }}</span
+              >{{ dayjs(parseInt(time as unknown as string)).format("DD-MM-YYYY HH:mm:ss") }}</span
             >:
             {{ diagnosis }}
           </div>
         </div>
       </div>
 
-      <div class="stats" v-if="patientStatusArray">
+      <div class="stats" v-if="slicedStatus">
         <div class="stats__grid">
           <div v-if="showCharts == 0" class="stats__grid__value">
             <line-chart

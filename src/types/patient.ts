@@ -1,11 +1,3 @@
-export interface Patient {
-  id: number;
-  firstName: string;
-  lastName: string;
-  diagnosis?: { [key: string]: string };
-  status?: { [key: string]: PatientStatus };
-}
-
 export interface PatientStatus {
   ECG: number;
   Pleth: number;
@@ -14,4 +6,14 @@ export interface PatientStatus {
   AWP: number;
   AWF: number;
   AWV: number;
+}
+
+export type Status = { [key: string]: PatientStatus };
+
+export interface Patient {
+  id: number;
+  firstName: string;
+  lastName: string;
+  diagnosis?: { [key: string]: string };
+  status?: Status;
 }
