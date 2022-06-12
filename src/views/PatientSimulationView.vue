@@ -16,7 +16,7 @@ import type { Unsubscribe } from "@firebase/util";
 
 // import cases
 import importedCases from "../allCases";
-const cases = ref<Cases>(importedCases);
+const cases = ref<Cases>(importedCases); // typescript overload bug
 
 // Constants
 const patient = ref<Patient>();
