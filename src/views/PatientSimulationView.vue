@@ -2,6 +2,7 @@
 import { ref, computed, onMounted } from "vue";
 import { useRoute } from "vue-router";
 import type { Patient, PatientStatus } from "../types/patient";
+import type { Cases } from "../types/cases";
 import dayjs from "dayjs";
 // Firebase import
 import {
@@ -14,14 +15,8 @@ import { ref as fref, onValue } from "firebase/database";
 import type { Unsubscribe } from "@firebase/util";
 
 // import cases
-import heart_attack_1_json from "../assets/cases/heart_attack_1.json";
-import heart_attack_2_json from "../assets/cases/heart_attack_2.json";
-import healthy_json from "../assets/cases/healthy.json";
-
-const heartAttackCase1: Array<PatientStatus> = heart_attack_1_json.data;
-const heartAttackCase2: Array<PatientStatus> = heart_attack_2_json.data;
-// const heartAttackCase3: Array<PatientStatus> = heart_attack_3_json.data;
-const healthyCase: Array<PatientStatus> = healthy_json.data;
+import importedCases from "../allCases";
+const cases = ref<Cases>(importedCases);
 
 // Constants
 const patient = ref<Patient>();
@@ -29,8 +24,8 @@ const patientID = ref<number>(0);
 const timer = ref();
 const freq = ref(20); // Timer interval in ms
 const isStarted = ref(false);
-const choosedCase = ref<Array<PatientStatus>>(healthyCase);
-const choosedCaseID = ref<number>(0);
+const choosedCase = ref<Array<PatientStatus>>(cases.value.healthyCases[0].data);
+const choosedCaseID = ref<string>("h0");
 const showCharts = ref<number>(0);
 const slicedStatus = ref();
 
@@ -190,33 +185,32 @@ onMounted(() => {
         <div>
           Wybierz przypadek:
           <div>
-            <button
-              @click="
-                choosedCase = healthyCase;
-                choosedCaseID = 0;
-              "
-              :class="{ 'button-red': choosedCaseID == 0 }"
-            >
-              Zdrowy
-            </button>
-            <button
-              @click="
-                choosedCase = heartAttackCase1;
-                choosedCaseID = 1;
-              "
-              :class="{ 'button-red': choosedCaseID == 1 }"
-            >
-              Zawał serca 1
-            </button>
-            <button
-              @click="
-                choosedCase = heartAttackCase2;
-                choosedCaseID = 2;
-              "
-              :class="{ 'button-red': choosedCaseID == 2 }"
-            >
-              Zawał serca 2
-            </button>
+            <div>
+              <button
+                v-for="(healthy, index) in cases.healthyCases"
+                :key="'h' + index"
+                @click="
+                  choosedCase = healthy.data;
+                  choosedCaseID = 'h' + index;
+                "
+                :class="{ 'button-red': choosedCaseID == 'h' + index }"
+              >
+                Zdrowy {{ index + 1 }}
+              </button>
+            </div>
+            <div>
+              <button
+                v-for="(heartAttack, index) in cases.heartAttackCases"
+                :key="'ha' + index"
+                @click="
+                  choosedCase = heartAttack.data;
+                  choosedCaseID = 'ha' + index;
+                "
+                :class="{ 'button-red': choosedCaseID == 'ha' + index }"
+              >
+                Zawał {{ index + 1 }}
+              </button>
+            </div>
           </div>
         </div>
         <div>
