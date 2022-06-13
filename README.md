@@ -1,6 +1,19 @@
 # PSiSK-front
 
-This template should help get you started developing with Vue 3 in Vite.
+Do uruchomienia potrzeba Node.js i menadżer pakietów NPM.
+Jak uruchomić:
+1. Należy pobrać repozytorium.
+2. Za pomocą IDE (np. Visual Studio Code) lub konsoli przejść do głównego folderu z aplikacją.
+3. Uruchomić polecenie "npm install".
+4. Po zainstalowaniu należy użyć polecenia "npm run dev".
+5. Aplikacja będzie widoczna w przeglądarce na localhost:3000.
+
+
+
+
+
+
+
 
 ## Recommended IDE Setup
 

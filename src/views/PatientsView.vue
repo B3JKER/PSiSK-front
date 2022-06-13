@@ -6,6 +6,7 @@ import { getPatients, deletePatient } from "@/firebase";
 const patients = ref<Array<Patient>>();
 const confirm = ref<Array<boolean>>([]);
 const deleting = ref<Array<boolean>>([]);
+const lastID = ref<number>();
 
 function getAllPatients() {
   getPatients().then((data) => {
@@ -15,6 +16,7 @@ function getAllPatients() {
         patients.value.forEach((element) => {
           confirm.value[element.id] = false;
           deleting.value[element.id] = false;
+          lastID.value = element.id;
         });
     } else {
       patients.value = undefined;
@@ -40,31 +42,37 @@ onMounted(() => {
       <div>Akcje</div>
     </div>
     <div v-if="patients" class="patients-grid">
-      <div v-for="patient in patients" :key="patient.id" class="patient">
-        <div>{{ patient.id }}</div>
-        <div>{{ patient.firstName }} {{ patient.lastName }}</div>
-        <button v-if="!confirm[patient.id]" @click="confirm[patient.id] = true">
-          Usuń pacjenta
-        </button>
-        <button
-          v-else
-          @click="
-            deleteAPatient(patient.id);
-            confirm[patient.id] = false;
-          "
-        >
-          Czy napewno?
-        </button>
-        <button
-          @click="
-            $router.push({
-              path: '/patient-simulation',
-              query: { id: patient.id },
-            })
-          "
-        >
-          Symulacja
-        </button>
+      <div v-for="patient in patients" :key="patient.id">
+        <div v-if="patient" class="patient">
+          <div>{{ patient.id }}</div>
+          <div>{{ patient.firstName }} {{ patient.lastName }}</div>
+          <button
+            v-if="!confirm[patient.id] && patient.id === lastID"
+            @click="confirm[patient.id] = true"
+          >
+            Usuń pacjenta
+          </button>
+          <button
+            v-else-if="patient.id === lastID"
+            @click="
+              deleteAPatient(patient.id);
+              confirm[patient.id] = false;
+            "
+          >
+            Czy napewno?
+          </button>
+          <button v-else></button>
+          <button
+            @click="
+              $router.push({
+                path: '/patient-simulation',
+                query: { id: patient.id },
+              })
+            "
+          >
+            Symulacja
+          </button>
+        </div>
       </div>
     </div>
     <div v-else class="loading">Ładowanie listy pacjentów...</div>

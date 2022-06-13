@@ -10,8 +10,8 @@ const form = ref<Patient>({
 });
 function getAllPatients() {
   getPatients().then((data) => {
-    console.log(data);
-    form.value.id = Object.entries(data).length;
+    if (data) form.value.id = Object.entries(data).length;
+    else form.value.id = 0;
   });
 }
 function onSubmit() {

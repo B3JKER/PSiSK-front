@@ -15,6 +15,8 @@ import {
   update,
   remove,
   query,
+  orderByKey,
+  orderByValue,
 } from "firebase/database";
 
 // Your web app's Firebase configuration
@@ -65,7 +67,8 @@ export const deletePatient = async (id: number): Promise<string> => {
 };
 
 export const getPatients = async () => {
-  const test = await get(child(dbRef, `patients/`));
+  const limitQuery = query(ref(db, `patients/`));
+  const test = await get(limitQuery);
   return test.exists() ? test.val() : undefined;
 };
 
