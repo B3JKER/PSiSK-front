@@ -1,28 +1,33 @@
 <script setup lang="ts">
-import { ref, computed } from "vue";
-import slider from "vue3-slider";
+import { ref, computed, onMounted } from "vue";
+import { useRoute } from "vue-router";
 import type { Patient, PatientStatus } from "../types/patient";
+import type { Cases } from "../types/cases";
 import dayjs from "dayjs";
 // Firebase import
-import { getPatient, updatePatientStatus, db } from "@/firebase";
+import {
+  getPatient,
+  updatePatientStatus,
+  getPatientStatus,
+  db,
+} from "@/firebase";
 import { ref as fref, onValue } from "firebase/database";
 import type { Unsubscribe } from "@firebase/util";
+
+// import cases
+import importedCases from "../allCases";
+const cases = ref<Cases>(importedCases); // typescript overload bug
 
 // Constants
 const patient = ref<Patient>();
 const patientID = ref<number>(0);
-const simulatedStatus = ref<PatientStatus>({
-  ECG: 0.5,
-  Pleth: 0.5,
-  CO2: 0,
-  ART: 0,
-  AWP: 0,
-  AWF: 11,
-  AMV: 400,
-});
 const timer = ref();
-const freq = ref(1000);
+const freq = ref(20); // Timer interval in ms
 const isStarted = ref(false);
+const choosedCase = ref<Array<PatientStatus>>(cases.value.healthyCases[0].data);
+const choosedCaseID = ref<string>("h0");
+const showCharts = ref<number>(0);
+const slicedStatus = ref();
 
 // database listener for value events
 var diagnosisListener: Unsubscribe;
@@ -39,6 +44,16 @@ function searchPatient(id: number) {
       patient.value = undefined;
     }
   });
+  getPatientStatus(id).then((data) => {
+    if (data !== undefined) {
+      var sliced = data;
+      const arrayLen = Object.entries(sliced).length;
+      slicedStatus.value = Object.entries(sliced).slice(
+        arrayLen - 380 < 0 ? 0 : arrayLen - 380,
+        arrayLen
+      );
+    } else slicedStatus.value = undefined;
+  });
 }
 
 /**
@@ -49,11 +64,12 @@ function searchPatient(id: number) {
  */
 function updateStatus(patient: Patient, status: PatientStatus, time: string) {
   updatePatientStatus(patient.id, time, status);
-  if (patient.status) {
-    patient.status[time] = status;
+  if (slicedStatus.value) {
+    if (slicedStatus.value.length > 380) slicedStatus.value.shift();
+    slicedStatus.value.push([time, status]);
   } else {
-    patient.status = {};
-    patient.status[time] = status;
+    slicedStatus.value = [];
+    slicedStatus.value.push([time, status]);
   }
 }
 
@@ -66,23 +82,18 @@ function startSimulation() {
   if (patient.value) {
     isStarted.value = true;
     // Listener for updates diagnosis
-    const refDiagnosis = fref(
-      db,
-      "patients/" + patient.value.id + "/diagnosis"
-    );
+    const refDiagnosis = fref(db, "diagnoses/" + patient.value.id);
     diagnosisListener = onValue(refDiagnosis, (snapshot) => {
       const data = snapshot.val();
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      patient.value!.diagnosis = data;
+      if (patient.value) patient.value.diagnosis = data;
     });
+    var i = 0;
     // Timer to update simulation
     timer.value = setInterval(function () {
-      var actualTime = dayjs().format("DD-MM-YYYY--HH-mm-ss-SSS");
-      updateStatus(
-        patient.value as Patient,
-        { ...simulatedStatus.value },
-        actualTime
-      );
+      if (i >= choosedCase.value.length - 1) i = 0;
+      else i++;
+      var actualTime = dayjs().valueOf().toString();
+      updateStatus(patient.value as Patient, choosedCase.value[i], actualTime);
     }, freq.value); // Timer interval
   }
 }
@@ -109,20 +120,9 @@ const lastDiagnosis = computed(() => {
   }
   return {};
 });
-const patientStatusArray = computed(() => {
-  if (patient.value && patient.value.status) {
-    return Object.fromEntries(
-      Object.entries(patient.value.status)
-        .sort((a, b) => b[0].localeCompare(a[0]))
-        .slice(0, 200)
-    );
-  }
-  return undefined;
-});
 
 const forCharts = computed(() => {
-  if (patientStatusArray.value) {
-    // var testowo: Array<{ [key: string]: number }> = [];
+  if (slicedStatus.value) {
     var testowo: Array<{ [key: string]: number }> = [
       {},
       {},
@@ -132,19 +132,28 @@ const forCharts = computed(() => {
       {},
       {},
     ];
-    for (const [key, value] of Object.entries(patientStatusArray.value)) {
-      var slicedKey = key.slice(12).replaceAll("-", ":");
+    for (const [key, value] of slicedStatus.value) {
+      const keyInt = parseInt(key);
+      var slicedKey = dayjs(keyInt).format("HH:mm:ss:SSS");
       testowo[0][slicedKey] = value.ECG;
       testowo[1][slicedKey] = value.Pleth;
       testowo[2][slicedKey] = value.CO2;
       testowo[3][slicedKey] = value.ART;
       testowo[4][slicedKey] = value.AWP;
       testowo[5][slicedKey] = value.AWF;
-      testowo[6][slicedKey] = value.AMV;
+      testowo[6][slicedKey] = value.AWV;
     }
     return testowo;
   }
   return undefined;
+});
+
+onMounted(() => {
+  const currentRoute = useRoute().query.id;
+  if (currentRoute) {
+    patientID.value = currentRoute as unknown as number;
+    searchPatient(patientID.value);
+  }
 });
 </script>
 
@@ -164,176 +173,163 @@ const forCharts = computed(() => {
         </div>
         <div>
           <h3>Status pacjenta:</h3>
-          <div>
-            ECG
-            <div>{{ simulatedStatus.ECG.toFixed(2) }}</div>
-            <slider
-              v-model="simulatedStatus.ECG"
-              color="#FB278D"
-              track-color="#FEFEFE"
-              :max="1.5"
-              :min="-0.3"
-              :step="0.01"
-            />
-          </div>
-          <div>
-            Pleth
-            <div>{{ simulatedStatus.Pleth.toFixed(2) }}</div>
-            <slider
-              v-model="simulatedStatus.Pleth"
-              color="#FB278D"
-              track-color="#FEFEFE"
-              :max="1.5"
-              :min="0"
-              :step="0.01"
-            />
-          </div>
-          <div>
-            CO2
-            <div>{{ simulatedStatus.CO2.toFixed(2) }}</div>
-            <slider
-              v-model="simulatedStatus.CO2"
-              color="#FB278D"
-              track-color="#FEFEFE"
-              :max="50"
-              :min="0"
-              :step="0.1"
-            />
-          </div>
-          <div>
-            ART
-            <div>{{ simulatedStatus.ART.toFixed(2) }}</div>
-            <slider
-              v-model="simulatedStatus.ART"
-              color="#FB278D"
-              track-color="#FEFEFE"
-              :max="200"
-              :min="0"
-              :step="1"
-            />
-          </div>
-          <div>
-            AWP
-            <div>{{ simulatedStatus.AWP.toFixed(2) }}</div>
-            <slider
-              v-model="simulatedStatus.AWP"
-              color="#FB278D"
-              track-color="#FEFEFE"
-              :max="30"
-              :min="0"
-              :step="0.1"
-            />
-          </div>
-          <div>
-            AWF
-            <div>{{ simulatedStatus.AWF.toFixed(2) }}</div>
-            <slider
-              v-model="simulatedStatus.AWF"
-              color="#FB278D"
-              track-color="#FEFEFE"
-              :max="60"
-              :min="-20"
-              :step="0.1"
-            />
-          </div>
-          <div>
-            AMV
-            <div>{{ simulatedStatus.AMV.toFixed(2) }}</div>
-            <slider
-              v-model="simulatedStatus.AMV"
-              color="#FB278D"
-              track-color="#FEFEFE"
-              :max="2000"
-              :min="0"
-              :step="1"
-            />
-          </div>
         </div>
-        <button v-if="!isStarted" :onclick="startSimulation">
+        <button v-if="!isStarted" @click="startSimulation">
           Rozpocznij symulacje
         </button>
-        <button v-else :onclick="stopSimulation">Zatrzymaj symulacje</button>
+        <button v-else @click="stopSimulation">Zatrzymaj symulacje</button>
         <div class="freq-input">
-          Częstotliwość symulacji w milisekundach
-          <input type="number" v-model="freq" />
+          Częstotliwość symulacji w milisekundach: {{ freq }}
+          <!-- <input type="number" v-model="freq" /> -->
         </div>
-        <div v-if="patient && patient.diagnosis">
+        <div>
+          Wybierz przypadek:
+          <div>
+            <div>
+              <button
+                v-for="(healthy, index) in cases.healthyCases"
+                :key="'h' + index"
+                @click="
+                  choosedCase = healthy.data;
+                  choosedCaseID = 'h' + index;
+                "
+                :class="{ 'button-red': choosedCaseID == 'h' + index }"
+              >
+                Zdrowy {{ index + 1 }}
+              </button>
+            </div>
+            <div>
+              <button
+                v-for="(heartAttack, index) in cases.heartAttackCases"
+                :key="'ha' + index"
+                @click="
+                  choosedCase = heartAttack.data;
+                  choosedCaseID = 'ha' + index;
+                "
+                :class="{ 'button-red': choosedCaseID == 'ha' + index }"
+              >
+                Zawał {{ index + 1 }}
+              </button>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div>Wybierz wykres:</div>
+          <button
+            @click="showCharts = 0"
+            :class="{ 'button-red': showCharts == 0 }"
+          >
+            ECG
+          </button>
+          <button
+            @click="showCharts = 1"
+            :class="{ 'button-red': showCharts == 1 }"
+          >
+            Pleth
+          </button>
+          <button
+            @click="showCharts = 2"
+            :class="{ 'button-red': showCharts == 2 }"
+          >
+            CO2
+          </button>
+          <button
+            @click="showCharts = 3"
+            :class="{ 'button-red': showCharts == 3 }"
+          >
+            ART
+          </button>
+          <button
+            @click="showCharts = 4"
+            :class="{ 'button-red': showCharts == 4 }"
+          >
+            AWP
+          </button>
+          <button
+            @click="showCharts = 5"
+            :class="{ 'button-red': showCharts == 5 }"
+          >
+            AWF
+          </button>
+          <button
+            @click="showCharts = 6"
+            :class="{ 'button-red': showCharts == 6 }"
+          >
+            AWV
+          </button>
+        </div>
+        <div v-if="patient && patient.diagnosis" class="diagnosis">
           Diagnoza:
           <div
             v-for="(diagnosis, time) in lastDiagnosis"
             :key="time"
             class="stats__grid__value"
           >
-            {{ time }} {{ diagnosis }}
+            <span
+              >{{ dayjs(parseInt(time as unknown as string)).format("DD-MM-YYYY HH:mm:ss") }}</span
+            >:
+            {{ diagnosis }}
           </div>
         </div>
       </div>
 
-      <div class="stats" v-if="patientStatusArray">
+      <div class="stats" v-if="slicedStatus">
         <div class="stats__grid">
-          <div>
-            <div class="stats__grid__value">
-              <line-chart
-                :data="forCharts ? forCharts[0] : {}"
-                xtitle="Time"
-                ytitle="ECG"
-              >
-              </line-chart>
-            </div>
+          <div v-if="showCharts == 0" class="stats__grid__value">
+            <line-chart
+              :data="forCharts ? forCharts[0] : {}"
+              xtitle="Czas"
+              ytitle="ECG"
+            >
+            </line-chart>
           </div>
-          <div>
-            <div class="stats__grid__value">
-              <line-chart
-                :data="forCharts ? forCharts[1] : {}"
-                xtitle="Time"
-                ytitle="Pleth"
-              ></line-chart>
-            </div>
+
+          <div v-else-if="showCharts == 1" class="stats__grid__value">
+            <line-chart
+              :data="forCharts ? forCharts[1] : {}"
+              xtitle="Czas"
+              ytitle="Pleth"
+            ></line-chart>
           </div>
-          <div>
-            <div class="stats__grid__value">
-              <line-chart
-                :data="forCharts ? forCharts[2] : {}"
-                xtitle="Time"
-                ytitle="CO2"
-              ></line-chart>
-            </div>
+
+          <div v-else-if="showCharts == 2" class="stats__grid__value">
+            <line-chart
+              :data="forCharts ? forCharts[2] : {}"
+              xtitle="Czas"
+              ytitle="CO2"
+            ></line-chart>
           </div>
-          <div>
-            <div class="stats__grid__value">
-              <line-chart
-                :data="forCharts ? forCharts[3] : {}"
-                xtitle="Time"
-                ytitle="ART"
-              ></line-chart>
-            </div>
+
+          <div v-else-if="showCharts == 3" class="stats__grid__value">
+            <line-chart
+              :data="forCharts ? forCharts[3] : {}"
+              xtitle="Czas"
+              ytitle="ART"
+            ></line-chart>
           </div>
-          <div>
-            <div class="stats__grid__value">
-              <line-chart
-                :data="forCharts ? forCharts[4] : {}"
-                xtitle="Time"
-                ytitle="AWP"
-              ></line-chart>
-            </div>
+
+          <div v-else-if="showCharts == 4" class="stats__grid__value">
+            <line-chart
+              :data="forCharts ? forCharts[4] : {}"
+              xtitle="Czas"
+              ytitle="AWP"
+            ></line-chart>
           </div>
-          <div>
-            <div class="stats__grid__value">
-              <line-chart
-                :data="forCharts ? forCharts[5] : {}"
-                xtitle="Time"
-                ytitle="AWF"
-              ></line-chart>
-            </div>
+
+          <div v-else-if="showCharts == 5" class="stats__grid__value">
+            <line-chart
+              :data="forCharts ? forCharts[5] : {}"
+              xtitle="Czas"
+              ytitle="AWF"
+            ></line-chart>
           </div>
-          <div>
-            <div class="stats__grid__value">
-              <line-chart
-                :data="forCharts ? forCharts[6] : {}"
-                xtitle="Time"
-                ytitle="AMV"
-              ></line-chart>
-            </div>
+
+          <div v-else-if="showCharts == 6" class="stats__grid__value">
+            <line-chart
+              :data="forCharts ? forCharts[6] : {}"
+              xtitle="Czas"
+              ytitle="AWV"
+            ></line-chart>
           </div>
         </div>
       </div>
@@ -342,25 +338,39 @@ const forCharts = computed(() => {
 </template>
 
 <style lang="scss" scoped>
-.patient {
-  padding-right: 20px;
+h1 {
+  width: 100%;
+  padding-bottom: 40px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid white;
 }
 .patients-grid {
-  display: grid;
-  grid-template-columns: 0.2fr 1fr;
+  display: flex;
   width: 100%;
   margin-top: 50px;
 }
+.patient {
+  width: 25%;
+  padding-right: 20px;
+}
+
 .stats {
   display: flex;
   flex-flow: wrap column;
   background-color: white;
+  width: 75%;
+
   &__grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    &__value {
-      margin-right: 10px;
-    }
+    width: 100%;
+    padding: 20px;
   }
+}
+.diagnosis {
+  margin-top: 20px;
+  font-size: 20px;
+}
+.button-red {
+  background-color: red;
+  color: white;
 }
 </style>

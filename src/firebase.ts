@@ -1,7 +1,6 @@
 import type { Patient, PatientStatus } from "@/types/patient";
 
-// Import the functions you need from the SDKs you need
-
+import dayjs from "dayjs";
 // import Firebase
 import { initializeApp } from "firebase/app";
 
@@ -12,14 +11,13 @@ import {
   set,
   get,
   child,
-  onValue,
-  push,
+  limitToLast,
   update,
+  remove,
+  query,
+  orderByKey,
+  orderByValue,
 } from "firebase/database";
-
-// import { getAnalytics } from "firebase/analytics";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
 
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
@@ -45,15 +43,32 @@ const dbRef = ref(getDatabase());
 
 export const createPatient = (patient: Patient) => {
   set(ref(db, "patients/" + patient.id), patient);
+  const actualTime = dayjs().valueOf().toString();
+  set(ref(db, "diagnoses/" + patient.id), { [actualTime]: "Brak diagnozy" });
 };
 
 export const getPatient = async (id: number): Promise<Patient | undefined> => {
   const test = await get(child(dbRef, `patients/${id}`));
   return test.exists() ? test.val() : undefined;
 };
+export const getPatientStatus = async (
+  id: number
+): Promise<Patient | undefined> => {
+  const limitQuery = query(ref(db, `statuses/${id}/`), limitToLast(380));
+  const test = await get(limitQuery);
+  return test.exists() ? test.val() : undefined;
+};
+
+export const deletePatient = async (id: number): Promise<string> => {
+  await remove(child(dbRef, `patients/${id}`));
+  await remove(child(dbRef, `diagnoses/${id}`));
+  await remove(child(dbRef, `statuses/${id}`));
+  return "deleted";
+};
 
 export const getPatients = async () => {
-  const test = await get(child(dbRef, `patients/`));
+  const limitQuery = query(ref(db, `patients/`));
+  const test = await get(limitQuery);
   return test.exists() ? test.val() : undefined;
 };
 
@@ -64,6 +79,6 @@ export const updatePatientStatus = (
 ) => {
   // const newKey = push(child(ref(db), `patients/${id}/status/`)).key;
   const updates: { [key: string]: PatientStatus } = {};
-  updates["patients/" + id + "/status/" + time + "/"] = status;
+  updates["statuses/" + id + "/" + time + "/"] = status;
   return update(ref(db), updates);
 };

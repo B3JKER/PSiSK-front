@@ -7,7 +7,7 @@
     dane i wysyła je w czasie rzeczywistym do bazy danych, oraz pobiera
     diagnozę, wystawioną przez zewnętrzny system na podstawie zasymulowanych
     danych. Aktualnie aplikacja symuluje takie dane jak: EKG, Pleth, CO2, ART,
-    AWP, AWF, AMV
+    AWP, AWF, AWV
   </h2>
 </template>
 
